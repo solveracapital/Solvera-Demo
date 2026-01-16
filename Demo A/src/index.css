@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-solvera-bg text-solvera-text font-sans antialiased;
+  }
+}
+
+/* Glassmorphism utilities */
+.glass-panel {
+  @apply bg-white/5 backdrop-blur-md border border-white/10 shadow-xl;
+}
+
+.glass-card {
+  @apply bg-white/5 backdrop-blur-sm border border-white/5 hover:border-solvera-highlight/30 transition-all duration-300;
+}
