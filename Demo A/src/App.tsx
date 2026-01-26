@@ -1,13 +1,12 @@
 import React from 'react';
 import { Header } from './components/Header';
 import { AssetSummary } from './components/AssetSummary';
-import { ROIComparison } from './components/ROIComparison';
 import { Visualizations } from './components/Visualizations';
 import { CTAModal } from './components/CTAModal';
 import { useSimulation, type GrowthScenario } from './hooks/useSimulation';
 import * as Slider from '@radix-ui/react-slider';
 import { clsx } from 'clsx';
-import { SlidersHorizontal, Info } from 'lucide-react';
+import { SlidersHorizontal } from 'lucide-react';
 
 function App() {
   const { params, setParams, results } = useSimulation();
@@ -36,7 +35,7 @@ function App() {
           </h1>
           <p className="text-solvera-text/60 max-w-2xl">
             Simulasikan dampak tokenisasi ekuitas untuk startup logistik Seri B.
-            Visualisasikan efisiensi, likuiditas, dan peningkatan ROI bersih.
+            Visualisasikan efisiensi, likuiditas, dan peningkatan pertumbuhan nilai.
           </p>
         </div>
 
@@ -47,7 +46,7 @@ function App() {
             <h2 className="text-lg font-bold">Parameter Simulasi</h2>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Input 1: Tokenized Equity */}
             <ControlGroup label="Ekuitas Tokenisasi %" value={`${params.tokenizedEquity}%`}>
               <CustomSlider
@@ -94,20 +93,6 @@ function App() {
                 ))}
               </div>
             </div>
-
-            {/* Read-only Cost Info */}
-            <div className="bg-white/5 rounded-lg p-3 border border-white/5 flex flex-col justify-center">
-              <div className="text-xs text-solvera-text/50 mb-1 flex items-center gap-1">
-                Penghematan Biaya Emisi
-                <Info className="w-3 h-3" />
-              </div>
-              <div className="text-lg font-mono font-bold text-solvera-highlight">
-                {params.issuanceCostTraditional}% vs {params.issuanceCostTokenized}%
-              </div>
-              <div className="text-xs text-solvera-positive mt-1">
-                Anda hemat {(params.issuanceCostTraditional - params.issuanceCostTokenized)}% di awal
-              </div>
-            </div>
           </div>
         </div>
 
@@ -115,14 +100,7 @@ function App() {
         <AssetSummary results={results} tokenizedEquity={params.tokenizedEquity} />
 
         <div className="grid lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-12 xl:col-span-5">
-            <ROIComparison
-              results={results}
-              issuanceCostTraditional={params.issuanceCostTraditional}
-              issuanceCostTokenized={params.issuanceCostTokenized}
-            />
-          </div>
-          <div className="lg:col-span-12 xl:col-span-7">
+          <div className="lg:col-span-12">
             <Visualizations results={results} />
           </div>
         </div>
@@ -160,3 +138,4 @@ const CustomSlider = (props: React.ComponentProps<typeof Slider.Root>) => (
 );
 
 export default App;
+

@@ -28,7 +28,7 @@ export const AssetSummary: React.FC<AssetSummaryProps> = ({ results, tokenizedEq
                 value={formatPercent(results.tokenized.netIRR)}
                 icon={<Wallet className="w-5 h-5 text-solvera-positive" />}
                 highlight
-                subtext={`Kenaikan: +${results.tokenized.liquidityUplift.toFixed(1)}% vs Tradisional`}
+                subtext="Imbal Hasil Proyeksi (Net)"
             />
         </div>
     );
