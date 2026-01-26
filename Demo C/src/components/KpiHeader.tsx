@@ -1,4 +1,5 @@
-
+import type { KPIMetrics } from '../types';
+import { formatCurrency, formatMultiplier } from '../utils';
 
 const KpiCard = ({ label, value, sublabel }: { label: string; value: string; sublabel?: string }) => {
     return (
@@ -10,13 +11,13 @@ const KpiCard = ({ label, value, sublabel }: { label: string; value: string; sub
     );
 };
 
-export const KpiHeader = () => {
+export const KpiHeader = ({ tvpi, dpi, moic, totalValuation }: KPIMetrics) => {
     return (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full mb-8">
-            <KpiCard label="TVPI" value="1.85x" sublabel="Top Quartile" />
-            <KpiCard label="DPI" value="0.45x" sublabel="+0.05x QoQ" />
-            <KpiCard label="Gross MOIC" value="2.1x" sublabel="Target: 3.0x" />
-            <KpiCard label="Total Valuasi Aset" value="Rp 1.5 T" sublabel="Updated: Today" />
+            <KpiCard label="TVPI" value={formatMultiplier(tvpi)} sublabel="Top Quartile" />
+            <KpiCard label="DPI" value={formatMultiplier(dpi)} sublabel="+0.05x QoQ" />
+            <KpiCard label="Gross MOIC" value={formatMultiplier(moic)} sublabel={`Target: ${formatMultiplier(3.0)}`} />
+            <KpiCard label="Total Valuasi Aset" value={formatCurrency(totalValuation)} sublabel="Updated: Today" />
         </div>
     );
 };

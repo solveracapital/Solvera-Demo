@@ -1,5 +1,6 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
+import { formatCurrency } from '../utils';
 
 
 interface Props {
@@ -59,20 +60,21 @@ export const ExitValuationSimulator: React.FC<Props> = ({ entryValuation, organi
             return (
                 <div className="bg-gray-800 border border-gray-700 p-3 rounded shadow-xl text-sm">
                     <p className="font-bold text-white mb-1">{dataPoint.name}</p>
-                    <p className="text-gray-300">
+                    <p className="text-white">
                         Value: <span className="text-white font-mono">{formatCurrency(dataPoint.value)}</span>
                     </p>
                     {!dataPoint.isTotal && (
-                        <p className="text-gray-400 text-xs mt-1">
+                        <p className="text-white text-xs mt-1">
                             Starts at: {formatCurrency(dataPoint.start)}
                         </p>
                     )}
-                    <p className="text-solvera-lime font-bold mt-2 pt-2 border-t border-gray-700">
+                    <p className="text-white font-bold mt-2 pt-2 border-t border-gray-700">
                         Cumulative: {formatCurrency(dataPoint.total)}
                     </p>
                 </div>
             );
         }
+
         return null;
     };
 
@@ -81,11 +83,11 @@ export const ExitValuationSimulator: React.FC<Props> = ({ entryValuation, organi
             <div className="flex justify-between items-end mb-4 px-2">
                 <div>
                     <div className="text-gray-400 text-sm">Projected Exit Valuation</div>
-                    <div className="text-4xl font-mono text-solvera-cyan font-bold">
+                    <div className="text-4xl font-mono text-white font-bold">
                         {formatCurrency(finalValuation)}
                     </div>
                     {operationalUplift > 0 && (
-                        <div className="text-solvera-lime text-sm font-medium mt-1">
+                        <div className="text-white text-sm font-medium mt-1">
                             +{formatCurrency(operationalUplift)} from Alpha Initiatives
                         </div>
                     )}
@@ -164,7 +166,9 @@ export const WaterfallChart: React.FC<Props> = ({ entryValuation, organicGrowth,
         }
     ];
 
-    const formatCurrency = (val: number) => `Rp ${val} M`;
+    // Calculate dynamic domain with padding to prevent label cutoff
+    const maxValue = finalValuation;
+    const domainMax = Math.ceil(maxValue * 1.15); // Add 15% padding for labels
 
     return (
         <div className="h-[400px] w-full bg-gray-900/40 p-4 rounded-lg border border-gray-800/50">
@@ -191,11 +195,17 @@ export const WaterfallChart: React.FC<Props> = ({ entryValuation, organicGrowth,
                         tick={{ fill: '#9ca3af', fontSize: 12, fontWeight: 500 }}
                         dy={10}
                     />
+                    <YAxis
+                        hide
+                        domain={[0, domainMax]}
+                    />
                     <Tooltip
                         cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                        formatter={(value: any) => formatCurrency(value)}
-                        contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#f3f4f6' }}
+                        formatter={(value: any) => formatCurrency(value as number)}
+                        contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#ffffff' }}
+                        itemStyle={{ color: '#ffffff' }}
                     />
+
                     {/* Transparent placeholder bar to lift the visible bar */}
                     <Bar dataKey="pv" stackId="a" fill="transparent" />
                     {/* Actual visible bar */}
@@ -203,7 +213,13 @@ export const WaterfallChart: React.FC<Props> = ({ entryValuation, organicGrowth,
                         {data.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.fill} />
                         ))}
-                        <LabelList dataKey="uv" position="top" fill="#ffffff" formatter={(val: any) => formatCurrency(val)} style={{ fontSize: '12px', fontWeight: 'bold' }} />
+                        <LabelList
+                            dataKey="uv"
+                            position="top"
+                            fill="#ffffffff"
+                            formatter={(val: any) => formatCurrency(val as number)}
+                            style={{ fontSize: '12px', fontWeight: 'bold' }}
+                        />
                     </Bar>
                 </BarChart>
             </ResponsiveContainer>

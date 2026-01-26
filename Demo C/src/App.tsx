@@ -5,6 +5,7 @@ import { WaterfallChart } from './components/ExitValuationSimulator';
 import { SensitivityAnalysis } from './components/SensitivityAnalysis';
 import { AuditModal } from './components/AuditModal';
 import { INITIATIVES } from './data/initiatives';
+import type { KPIMetrics } from './types';
 import { ArrowUpRight } from 'lucide-react';
 
 function App() {
@@ -39,6 +40,28 @@ function App() {
     return ENTRY_VALUATION * totalImpactMultiple;
   }, [activeInitiatives]);
 
+  // Calculate dynamic KPIs based on active initiatives
+  const kpiMetrics = useMemo<KPIMetrics>(() => {
+    const finalValuation = ENTRY_VALUATION + organicGrowth + operationalUplift;
+
+    // MOIC: Base 2.1x + 0.1x per active initiative
+    const moic = 2.1 + (activeInitiatives.length * 0.1);
+
+    // TVPI: Scales proportionally with valuation uplift
+    const baseTVPI = 1.85;
+    const tvpi = baseTVPI * (1 + operationalUplift / ENTRY_VALUATION);
+
+    // DPI: Keep constant for now (could be made dynamic based on distributions)
+    const dpi = 0.45;
+
+    return {
+      tvpi,
+      dpi,
+      moic,
+      totalValuation: finalValuation
+    };
+  }, [activeInitiatives, organicGrowth, operationalUplift]);
+
   const toggleInitiative = (id: string) => {
     setActiveInitiatives(prev =>
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
@@ -46,19 +69,18 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-solvera-text font-sans p-6 md:p-12 pb-32">
+    <div className="min-h-screen bg-gray-950 text-solvera-text font-sans p-6 md:p-12">
       <header className="mb-10 border-b border-gray-800 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold text-solvera-text mb-2 tracking-tight">
             <span className="text-solvera-navy">Solvera</span> Investor Performance Lab
           </h1>
           <p className="text-gray-400 max-w-2xl">
-            Simulasi Portfolio Alpha Operasional & Teknikal
+            Private Equity / VC Portfolio Simulator
           </p>
         </div>
         <div className="flex items-center gap-6 text-right">
           <div className="hidden md:block">
-            <div className="text-sm text-gray-500 font-mono">PROJECT C</div>
             <div className="text-xs text-solvera-lime flex items-center justify-end gap-1">
               <span className="w-2 h-2 bg-solvera-lime rounded-full animate-pulse"></span>
               LIVE DEMO
@@ -75,7 +97,7 @@ function App() {
 
       <main className="max-w-7xl mx-auto space-y-8">
         <section>
-          <KpiHeader />
+          <KpiHeader {...kpiMetrics} />
         </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -121,8 +143,8 @@ function App() {
         </div>
       </main>
 
-      {/* Sticky Bottom CTA for Desktop */}
-      <div className="fixed bottom-0 left-0 right-0 bg-solvera-bg/90 backdrop-blur-md border-t border-gray-800 p-4 z-40 hidden md:block">
+      {/* Static Footer CTA for Desktop */}
+      <footer className="mt-12 bg-solvera-bg/90 backdrop-blur-md border-t border-gray-800 p-6 hidden md:block">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div>
             <h3 className="font-bold text-white text-lg">Optimalkan Valuasi Portofolio Anda</h3>
@@ -135,7 +157,7 @@ function App() {
             Jadwalkan Audit: Operational Engineering <ArrowUpRight size={20} />
           </button>
         </div>
-      </div>
+      </footer>
 
       <AuditModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>

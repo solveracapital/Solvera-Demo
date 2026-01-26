@@ -11,3 +11,10 @@ export interface SimulationState {
     exitYear: number;
     marketMultiple: number;
 }
+
+export interface KPIMetrics {
+    tvpi: number;
+    dpi: number;
+    moic: number;
+    totalValuation: number;
+}
