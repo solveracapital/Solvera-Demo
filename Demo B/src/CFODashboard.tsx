@@ -15,8 +15,10 @@ import { useLanguage } from './contexts/LanguageContext';
 
 interface CashFlowDataPoint {
     month: string;
-    baseline: number;
-    projected: number;
+    actual?: number;
+    forecast?: number;
+    baseline?: number;
+    projected?: number;
 }
 
 interface BudgetVarianceDataPoint {
@@ -179,7 +181,7 @@ export default function CFODashboard() {
         const cashFreedFromDso = DAILY_REVENUE * dsoReduction; // Cash injected from faster AR collection
 
         return BASE_CASH_FLOW.map(point => {
-            const baselineValue = point.actual ?? point.forecast; // Fallback to forecast if actual was null
+            const baselineValue = point.actual ?? point.forecast ?? 0; // Fallback to forecast if actual was null, and 0 if both are null
             let projectedValue = baselineValue;
 
             if (point.month === 'May' || hasInvested) {
@@ -430,8 +432,8 @@ export default function CFODashboard() {
                                 <Tooltip
                                     contentStyle={{ backgroundColor: '#181B21', borderColor: '#374151', color: '#F3EED8' }}
                                     labelStyle={{ color: '#9ca3af', marginBottom: '0.5rem' }}
-                                    formatter={(val: number, name: string) => [
-                                        formatCurrency(val, language).replace(new RegExp(language === 'en' ? '\\$' : 'Rp\\s?', 'g'), ''),
+                                    formatter={(val: any, name: any) => [
+                                        formatCurrency(val || 0, language).replace(new RegExp(language === 'en' ? '\\$' : 'Rp\\s?', 'g'), ''),
                                         name === 'baseline' ? t('Baseline (Current)', 'Baseline (Current)') : t('Projected (+ROI)', 'Projected (+ROI)')
                                     ]}
                                 />
@@ -564,7 +566,7 @@ function ResultRow({ label, value, highlight = false }: any) {
 }
 
 function StatusBadge({ status }: { status: string }) {
-    const { language, t } = useLanguage();
+    const { t } = useLanguage();
     let colorClass = 'bg-gray-800 text-gray-300';
     let translatedStatus = status;
 
