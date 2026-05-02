@@ -1,6 +1,7 @@
 import React from 'react';
 import { Dialog } from '@headlessui/react';
 import { X, ArrowRight } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface Props {
     isOpen: boolean;
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export const AuditModal: React.FC<Props> = ({ isOpen, onClose }) => {
+    const { t } = useLanguage();
     return (
         <Dialog open={isOpen} onClose={onClose} className="relative z-50">
             {/* The backdrop, rendered as a fixed sibling to the panel container */}
@@ -19,7 +21,7 @@ export const AuditModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
                     <div className="p-6 border-b border-gray-800 flex justify-between items-center">
                         <Dialog.Title className="text-xl font-bold text-solvera-text">
-                            Operational Engineering Audit Plan
+                            {t('Operational Engineering Audit Plan', 'Operational Engineering Audit Plan')}
                         </Dialog.Title>
                         <button onClick={onClose} className="text-gray-400 hover:text-white">
                             <X size={24} />
@@ -28,7 +30,7 @@ export const AuditModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
                     <div className="p-8">
                         <p className="text-gray-400 mb-8">
-                            Langkah strategis untuk mengubah efisiensi operasional menjadi valuasi exit yang lebih tinggi melalui intervensi engineering.
+                            {t('Langkah strategis untuk mengubah efisiensi operasional menjadi valuasi exit yang lebih tinggi melalui intervensi engineering.', 'Strategic steps to transform operational efficiency into higher exit valuations through engineering interventions.')}
                         </p>
 
                         <div className="space-y-6 relative">
@@ -38,24 +40,24 @@ export const AuditModal: React.FC<Props> = ({ isOpen, onClose }) => {
                             <div className="flex gap-4">
                                 <div className="w-12 h-12 rounded-full bg-gray-800 border-2 border-solvera-navy flex items-center justify-center shrink-0 font-bold text-solvera-navy">1</div>
                                 <div>
-                                    <h3 className="font-bold text-white text-lg">Portfolio Readiness Check</h3>
-                                    <p className="text-sm text-gray-500">Kesiapan Portofolio: Evaluasi infrastruktur saat ini dan identifikasi bottleneck utama.</p>
+                                    <h3 className="font-bold text-white text-lg">{t('Portfolio Readiness Check', 'Portfolio Readiness Check')}</h3>
+                                    <p className="text-sm text-gray-500">{t('Kesiapan Portofolio: Evaluasi infrastruktur saat ini dan identifikasi bottleneck utama.', 'Portfolio Readiness: Evaluate current infrastructure and identify key bottlenecks.')}</p>
                                 </div>
                             </div>
 
                             <div className="flex gap-4">
                                 <div className="w-12 h-12 rounded-full bg-gray-800 border-2 border-solvera-cyan flex items-center justify-center shrink-0 font-bold text-solvera-cyan">2</div>
                                 <div>
-                                    <h3 className="font-bold text-white text-lg">Engineering Maturity Assessment</h3>
-                                    <p className="text-sm text-gray-500">Penilaian Maturitas Teknik: Audit kapabilitas tim, CI/CD pipeline, dan kualitas kode.</p>
+                                    <h3 className="font-bold text-white text-lg">{t('Engineering Maturity Assessment', 'Engineering Maturity Assessment')}</h3>
+                                    <p className="text-sm text-gray-500">{t('Penilaian Maturitas Teknik: Audit kapabilitas tim, CI/CD pipeline, dan kualitas kode.', 'Engineering Maturity Assessment: Audit team capabilities, CI/CD pipelines, and code quality.')}</p>
                                 </div>
                             </div>
 
                             <div className="flex gap-4">
                                 <div className="w-12 h-12 rounded-full bg-gray-800 border-2 border-solvera-lime flex items-center justify-center shrink-0 font-bold text-solvera-lime">3</div>
                                 <div>
-                                    <h3 className="font-bold text-white text-lg">Data Quality Audit</h3>
-                                    <p className="text-sm text-gray-500">Audit Kualitas Data: Memastikan integritas data untuk pengambilan keputusan berbasis AI.</p>
+                                    <h3 className="font-bold text-white text-lg">{t('Data Quality Audit', 'Data Quality Audit')}</h3>
+                                    <p className="text-sm text-gray-500">{t('Audit Kualitas Data: Memastikan integritas data untuk pengambilan keputusan berbasis AI.', 'Data Quality Audit: Ensure data integrity for AI-driven decision making.')}</p>
                                 </div>
                             </div>
                         </div>
@@ -66,13 +68,13 @@ export const AuditModal: React.FC<Props> = ({ isOpen, onClose }) => {
                             onClick={onClose}
                             className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white"
                         >
-                            Cancel
+                            {t('Cancel', 'Cancel')}
                         </button>
                         <button
-                            onClick={() => { alert('Booking Request Sent (Prototyping)'); onClose(); }}
+                            onClick={() => { alert(t('Booking Request Sent (Prototyping)', 'Booking Request Sent (Prototyping)')); onClose(); }}
                             className="px-6 py-2 bg-solvera-lime text-solvera-bg font-bold rounded hover:bg-opacity-90 flex items-center gap-2"
                         >
-                            Confirm Booking <ArrowRight size={16} />
+                            {t('Confirm Booking', 'Confirm Booking')} <ArrowRight size={16} />
                         </button>
                     </div>
 

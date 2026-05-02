@@ -1,6 +1,7 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
 import { formatCurrency } from '../utils';
+import { useLanguage } from '../contexts/LanguageContext';
 
 
 interface Props {
@@ -137,29 +138,30 @@ export const ExitValuationSimulator: React.FC<Props> = ({ entryValuation, organi
 
 // Refactored Component for Proper Waterfall
 export const WaterfallChart: React.FC<Props> = ({ entryValuation, organicGrowth, operationalUplift }) => {
+    const { language, t } = useLanguage();
     const finalValuation = entryValuation + organicGrowth + operationalUplift;
 
     const data = [
         {
-            name: 'Nilai Awal',
+            name: t('Nilai Awal', 'Entry Value'),
             uv: entryValuation, // height of visible bar
             pv: 0, // invisible placeholder height
             fill: '#64748b'
         },
         {
-            name: 'Pertumbuhan',
+            name: t('Pertumbuhan', 'Growth'),
             uv: organicGrowth,
             pv: entryValuation,
             fill: '#0F547D'
         },
         {
-            name: 'Alpha Ops.',
+            name: t('Alpha Ops.', 'Ops. Alpha'),
             uv: operationalUplift,
             pv: entryValuation + organicGrowth,
             fill: '#9EFF24'
         },
         {
-            name: 'Nilai Exit',
+            name: t('Nilai Exit', 'Exit Value'),
             uv: finalValuation,
             pv: 0,
             fill: '#7AE5FF'
@@ -174,13 +176,13 @@ export const WaterfallChart: React.FC<Props> = ({ entryValuation, organicGrowth,
         <div className="h-[400px] w-full bg-gray-900/40 p-4 rounded-lg border border-gray-800/50">
             <div className="flex justify-between items-end mb-4 px-2">
                 <div>
-                    <div className="text-gray-400 text-sm">Projected Exit Valuation</div>
+                    <div className="text-gray-400 text-sm">{t('Projected Exit Valuation', 'Projected Exit Valuation')}</div>
                     <div className="text-4xl font-mono text-solvera-cyan font-bold">
-                        {formatCurrency(finalValuation)}
+                        {formatCurrency(finalValuation, true, language)}
                     </div>
                     {operationalUplift > 0 && (
                         <div className="text-solvera-lime text-sm font-medium mt-1">
-                            +{formatCurrency(operationalUplift)} from Alpha Initiatives
+                            +{formatCurrency(operationalUplift, true, language)} {t('dari Inisiatif Alpha', 'from Alpha Initiatives')}
                         </div>
                     )}
                 </div>
@@ -201,7 +203,7 @@ export const WaterfallChart: React.FC<Props> = ({ entryValuation, organicGrowth,
                     />
                     <Tooltip
                         cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                        formatter={(value: any) => formatCurrency(value as number)}
+                        formatter={(value: any) => formatCurrency(value as number, true, language)}
                         contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#ffffff' }}
                         itemStyle={{ color: '#ffffff' }}
                     />
@@ -217,7 +219,7 @@ export const WaterfallChart: React.FC<Props> = ({ entryValuation, organicGrowth,
                             dataKey="uv"
                             position="top"
                             fill="#ffffffff"
-                            formatter={(val: any) => formatCurrency(val as number)}
+                            formatter={(val: any) => formatCurrency(val as number, true, language)}
                             style={{ fontSize: '12px', fontWeight: 'bold' }}
                         />
                     </Bar>

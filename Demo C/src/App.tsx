@@ -7,8 +7,11 @@ import { AuditModal } from './components/AuditModal';
 import { INITIATIVES } from './data/initiatives';
 import type { KPIMetrics } from './types';
 import { ArrowUpRight } from 'lucide-react';
+import SolveraLogo from './assets/Solvera.svg';
+import { useLanguage } from './contexts/LanguageContext';
 
 function App() {
+  const { language, setLanguage, t } = useLanguage();
   const [activeInitiatives, setActiveInitiatives] = useState<string[]>([]);
   const [exitYear, setExitYear] = useState<number>(5);
   const [marketMultiple, setMarketMultiple] = useState<number>(10); // 10x EBITDA
@@ -71,15 +74,34 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-950 text-solvera-text font-sans p-6 md:p-12">
       <header className="mb-10 border-b border-gray-800 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-solvera-text mb-2 tracking-tight">
-            <span className="text-solvera-navy">Solvera</span> Investor Performance Lab
-          </h1>
-          <p className="text-gray-400 max-w-2xl">
-            Private Equity / VC Portfolio Simulator
-          </p>
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 flex items-center justify-center shrink-0">
+            <img src={SolveraLogo} alt="Solvera Logo" className="w-full h-full object-contain" />
+          </div>
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-solvera-text mb-2 tracking-tight">
+              <span className="text-solvera-navy">Solvera</span> Investor Performance Lab
+            </h1>
+            <p className="text-gray-400 max-w-2xl">
+              {t('Private Equity / VC Portfolio Simulator', 'Private Equity / VC Portfolio Simulator')}
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-6 text-right">
+          <div className="flex items-center gap-2 bg-white/5 p-1 rounded-lg">
+            <button 
+                onClick={() => setLanguage('id')}
+                className={`px-2 py-1 text-xs font-bold rounded ${language === 'id' ? 'bg-solvera-navy text-white' : 'text-gray-400 hover:text-white'}`}
+            >
+                ID
+            </button>
+            <button 
+                onClick={() => setLanguage('en')}
+                className={`px-2 py-1 text-xs font-bold rounded ${language === 'en' ? 'bg-solvera-navy text-white' : 'text-gray-400 hover:text-white'}`}
+            >
+                EN
+            </button>
+          </div>
           <div className="hidden md:block">
             <div className="text-xs text-solvera-lime flex items-center justify-end gap-1">
               <span className="w-2 h-2 bg-solvera-lime rounded-full animate-pulse"></span>
@@ -90,7 +112,7 @@ function App() {
             onClick={() => setIsModalOpen(true)}
             className="md:hidden bg-solvera-navy text-white px-4 py-2 rounded font-medium"
           >
-            Book Audit
+            {t('Book Audit', 'Book Audit')}
           </button>
         </div>
       </header>
@@ -105,7 +127,7 @@ function App() {
           <div className="lg:col-span-5 bg-solvera-bg rounded-xl border border-gray-800 p-6 flex flex-col h-full">
             <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
               <span className="w-1 h-6 bg-solvera-cyan rounded-full"></span>
-              Value Creation Roadmap
+              {t('Value Creation Roadmap', 'Value Creation Roadmap')}
             </h2>
             <div className="flex-grow">
               <ValueCreationRoadmap
@@ -115,7 +137,7 @@ function App() {
               />
             </div>
             <div className="mt-6 pt-6 border-t border-gray-800 text-sm text-gray-500">
-              *Estimasi biaya dan dampak berdasarkan benchmark industri regional.
+              {t('*Estimasi biaya dan dampak berdasarkan benchmark industri regional.', '*Cost and impact estimates are based on regional industry benchmarks.')}
             </div>
           </div>
 
@@ -124,7 +146,7 @@ function App() {
             <div className="bg-solvera-bg rounded-xl border border-gray-800 p-6">
               <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
                 <span className="w-1 h-6 bg-solvera-lime rounded-full"></span>
-                Simulator Valuasi Exit
+                {t('Simulator Valuasi Exit', 'Exit Valuation Simulator')}
               </h2>
               <WaterfallChart
                 entryValuation={ENTRY_VALUATION}
@@ -147,14 +169,14 @@ function App() {
       <footer className="mt-12 bg-solvera-bg/90 backdrop-blur-md border-t border-gray-800 p-6 hidden md:block">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div>
-            <h3 className="font-bold text-white text-lg">Optimalkan Valuasi Portofolio Anda</h3>
-            <p className="text-sm text-gray-400">Implementasikan strategi engineering yang terukur.</p>
+            <h3 className="font-bold text-white text-lg">{t('Optimalkan Valuasi Portofolio Anda', 'Optimize Your Portfolio Valuation')}</h3>
+            <p className="text-sm text-gray-400">{t('Implementasikan strategi engineering yang terukur.', 'Implement measurable engineering strategies.')}</p>
           </div>
           <button
             onClick={() => setIsModalOpen(true)}
             className="bg-solvera-cyan text-solvera-bg font-bold px-8 py-3 rounded hover:bg-[#5adbf7] transition-colors flex items-center gap-2"
           >
-            Jadwalkan Audit: Operational Engineering <ArrowUpRight size={20} />
+            {t('Jadwalkan Audit: Operational Engineering', 'Schedule Audit: Operational Engineering')} <ArrowUpRight size={20} />
           </button>
         </div>
       </footer>

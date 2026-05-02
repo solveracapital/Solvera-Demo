@@ -8,52 +8,46 @@
  * @param value - The number to format (in Billions)
  * @returns Formatted string with abbreviation
  */
-export const formatNumber = (value: number): string => {
+export const formatNumber = (value: number, language: 'id' | 'en' = 'id'): string => {
     if (value === 0) return '0';
 
-    // Values are in Billions (1000 = 1 Trillion)
+    if (language === 'en') {
+        const usdAmount = (value * 1000000000) / 16000;
+        if (usdAmount >= 1000000) {
+            return `${(usdAmount / 1000000).toFixed(1)} M`;
+        } else if (usdAmount >= 1000) {
+            return `${(usdAmount / 1000).toFixed(1)} K`;
+        }
+        return `${usdAmount.toFixed(0)}`;
+    }
+
     if (value >= 1000) {
-        // Convert to Trillions
         const trillions = value / 1000;
         return `${trillions.toFixed(1)} T`;
     } else {
-        // Already in Billions, show as M (Miliar)
         return `${value.toFixed(0)} M`;
     }
 };
 
-/**
- * Format a number as Indonesian Rupiah currency
- * @param value - The number to format (in Billions)
- * @param compact - Whether to use abbreviated format
- * @returns Formatted currency string
- */
-export const formatCurrency = (value: number, compact: boolean = true): string => {
+export const formatCurrency = (value: number, compact: boolean = true, language: 'id' | 'en' = 'id'): string => {
+    if (language === 'en') {
+        return `$${formatNumber(value, 'en')}`;
+    }
+    
     if (compact) {
-        return `Rp ${formatNumber(value)}`;
+        return `Rp ${formatNumber(value, 'id')}`;
     } else {
-        // Full format with thousand separators
         const billions = value;
         const formatted = new Intl.NumberFormat('id-ID').format(billions);
         return `Rp ${formatted} Miliar`;
     }
 };
 
-/**
- * Format a number for chart axis display
- * @param value - The number to format
- * @returns Formatted string for axis
- */
-export const formatAxis = (value: number): string => {
+export const formatAxis = (value: number, language: 'id' | 'en' = 'id'): string => {
     if (value === 0) return '0';
-    return formatNumber(value);
+    return formatNumber(value, language);
 };
 
-/**
- * Format a multiplier (e.g., MOIC, TVPI)
- * @param value - The multiplier value
- * @returns Formatted string with 'x' suffix
- */
 export const formatMultiplier = (value: number): string => {
     return `${value.toFixed(1)}x`;
 };

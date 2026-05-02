@@ -7,9 +7,11 @@ import { useSimulation, type GrowthScenario } from './hooks/useSimulation';
 import * as Slider from '@radix-ui/react-slider';
 import { clsx } from 'clsx';
 import { SlidersHorizontal } from 'lucide-react';
+import { useLanguage } from './contexts/LanguageContext';
 
 function App() {
   const { params, setParams, results } = useSimulation();
+  const { t } = useLanguage();
 
   const handleSliderChange = (key: keyof typeof params, value: number[]) => {
     setParams(prev => ({ ...prev, [key]: value[0] }));
@@ -28,14 +30,15 @@ function App() {
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-2">
             <div className="h-1.5 w-12 bg-solvera-positive rounded-full" />
-            <span className="text-xs font-mono text-solvera-positive tracking-wider uppercase">Proyek A - Simulasi</span>
+            <span className="text-xs font-mono text-solvera-positive tracking-wider uppercase">{t('Proyek A - Simulasi', 'Project A - Simulation')}</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
             PT GreenLogistik Nusantara
           </h1>
           <p className="text-solvera-text/60 max-w-2xl">
-            Simulasikan dampak tokenisasi ekuitas untuk startup logistik Seri B.
-            Visualisasikan efisiensi, likuiditas, dan peningkatan pertumbuhan nilai.
+            {t('Simulasikan dampak tokenisasi ekuitas untuk startup logistik Seri B.', 'Simulate the impact of equity tokenization for a Series B logistics startup.')}
+            <br />
+            {t('Visualisasikan efisiensi, likuiditas, dan peningkatan pertumbuhan nilai.', 'Visualize efficiency, liquidity, and value growth enhancement.')}
           </p>
         </div>
 
@@ -43,12 +46,12 @@ function App() {
         <div className="glass-panel rounded-2xl p-6 md:p-8 mb-8 border border-white/10">
           <div className="flex items-center gap-2 mb-6 text-white pb-4 border-b border-white/5">
             <SlidersHorizontal className="w-5 h-5 text-solvera-highlight" />
-            <h2 className="text-lg font-bold">Parameter Simulasi</h2>
+            <h2 className="text-lg font-bold">{t('Parameter Simulasi', 'Simulation Parameters')}</h2>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Input 1: Tokenized Equity */}
-            <ControlGroup label="Ekuitas Tokenisasi %" value={`${params.tokenizedEquity}%`}>
+            <ControlGroup label={t('Ekuitas Tokenisasi %', 'Tokenized Equity %')} value={`${params.tokenizedEquity}%`}>
               <CustomSlider
                 value={[params.tokenizedEquity]}
                 min={5}
@@ -59,7 +62,7 @@ function App() {
             </ControlGroup>
 
             {/* Input 2: Exit Horizon */}
-            <ControlGroup label="Jangka Waktu Exit" value={`${params.exitHorizon} Tahun`}>
+            <ControlGroup label={t('Jangka Waktu Exit', 'Exit Horizon')} value={`${params.exitHorizon} ${t('Tahun', 'Years')}`}>
               <CustomSlider
                 value={[params.exitHorizon]}
                 min={3}
@@ -72,7 +75,7 @@ function App() {
             {/* Input 3: Growth Scenario */}
             <div>
               <div className="flex justify-between mb-3 text-sm">
-                <span className="text-solvera-text/70 font-medium">Skenario Pertumbuhan</span>
+                <span className="text-solvera-text/70 font-medium">{t('Skenario Pertumbuhan', 'Growth Scenario')}</span>
               </div>
               <div className="flex bg-white/5 p-1 rounded-lg">
                 {(['bear', 'base', 'bull'] as const).map((s) => (

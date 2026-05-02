@@ -12,20 +12,22 @@ import {
     BarChart
 } from 'recharts';
 import type { SimulationResult } from '../hooks/useSimulation';
-import { formatIDR } from '../lib/utils';
+import { formatCurrency } from '../lib/utils';
 import { TrendingUp, Activity, BarChart3 } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface VisualizationsProps {
     results: SimulationResult;
 }
 
 export const Visualizations: React.FC<VisualizationsProps> = ({ results }) => {
+    const { language, t } = useLanguage();
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
             {/* Top Row: Value Growth & Liquidity */}
 
             {/* Chart 1: Value Growth */}
-            <ChartCard title="Pertumbuhan Nilai Aset" icon={<TrendingUp className="w-4 h-4 text-solvera-highlight" />}>
+            <ChartCard title={t('Pertumbuhan Nilai Aset', 'Asset Value Growth')} icon={<TrendingUp className="w-4 h-4 text-solvera-highlight" />}>
                 <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={results.charts} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                         <defs>
@@ -58,14 +60,14 @@ export const Visualizations: React.FC<VisualizationsProps> = ({ results }) => {
                             strokeWidth={2}
                             fillOpacity={1}
                             fill="url(#colorTokenized)"
-                            name="Nilai Aset"
+                            name={t('Nilai Aset', 'Asset Value')}
                         />
                     </ComposedChart>
                 </ResponsiveContainer>
             </ChartCard>
 
             {/* Chart 2: Liquidity Score */}
-            <ChartCard title="Skor Likuiditas" icon={<Activity className="w-4 h-4 text-solvera-positive" />}>
+            <ChartCard title={t('Skor Likuiditas', 'Liquidity Score')} icon={<Activity className="w-4 h-4 text-solvera-positive" />}>
                 <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={results.charts} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
@@ -92,7 +94,7 @@ export const Visualizations: React.FC<VisualizationsProps> = ({ results }) => {
                             strokeWidth={2}
                             dot={{ fill: '#10b981', r: 3 }}
                             activeDot={{ r: 5 }}
-                            name="Likuiditas"
+                            name={t('Likuiditas', 'Liquidity')}
                         />
                     </ComposedChart>
                 </ResponsiveContainer>
@@ -100,7 +102,7 @@ export const Visualizations: React.FC<VisualizationsProps> = ({ results }) => {
 
             {/* Bottom Row: Volume (Full Width) */}
             <div className="md:col-span-2">
-                <ChartCard title="Volume Perdagangan Pasar Sekunder" icon={<BarChart3 className="w-4 h-4 text-purple-400" />}>
+                <ChartCard title={t('Volume Perdagangan Pasar Sekunder', 'Secondary Market Trading Volume')} icon={<BarChart3 className="w-4 h-4 text-purple-400" />}>
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={results.charts} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
@@ -117,14 +119,14 @@ export const Visualizations: React.FC<VisualizationsProps> = ({ results }) => {
                                 fontSize={10}
                                 tickLine={false}
                                 axisLine={false}
-                                tickFormatter={(value) => `${(value / 1_000_000).toFixed(0)} jt`}
+                                tickFormatter={(value) => language === 'en' ? `$${(value / 16_000_000_000).toFixed(1)}M` : `${(value / 1_000_000).toFixed(0)} jt`}
                             />
                             <Tooltip content={<CustomTooltip type="volume" />} />
                             <Bar
                                 dataKey="volume"
                                 fill="#a78bfa"
                                 radius={[4, 4, 0, 0]}
-                                name="Volume"
+                                name={t('Volume', 'Volume')}
                                 barSize={40}
                             />
                         </BarChart>
@@ -148,6 +150,7 @@ const ChartCard = ({ title, icon, children }: { title: string, icon: React.React
 );
 
 const CustomTooltip = ({ active, payload, label, type }: any) => {
+    const { language, t } = useLanguage();
     if (active && payload && payload.length) {
         let value = payload[0].value;
         let formattedValue = '';
@@ -155,7 +158,7 @@ const CustomTooltip = ({ active, payload, label, type }: any) => {
         switch (type) {
             case 'value':
             case 'volume':
-                formattedValue = formatIDR(value);
+                formattedValue = formatCurrency(value, language);
                 break;
             case 'liquidity':
                 formattedValue = `${value}/100`;
@@ -166,7 +169,7 @@ const CustomTooltip = ({ active, payload, label, type }: any) => {
 
         return (
             <div className="glass-panel p-3 rounded-lg border border-white/10 text-xs shadow-xl backdrop-blur-xl bg-black/80">
-                <p className="font-mono text-solvera-text/60 mb-1">Tahun {label}</p>
+                <p className="font-mono text-solvera-text/60 mb-1">{t('Tahun', 'Year')} {label}</p>
                 <div className="flex items-center gap-2">
                     <div
                         className="w-2 h-2 rounded-full"

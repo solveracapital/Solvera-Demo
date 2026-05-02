@@ -1,13 +1,15 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { Check, X, ArrowRight, ShieldCheck, FileText, Lock } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export const CTAModal = () => {
+    const { t } = useLanguage();
     return (
         <Dialog.Root>
             <div className="fixed bottom-0 left-0 right-0 p-4 z-40 bg-gradient-to-t from-solvera-bg to-transparent pointer-events-none flex justify-center">
                 <Dialog.Trigger asChild>
                     <button className="pointer-events-auto shadow-2xl shadow-solvera-primary/50 bg-solvera-primary hover:bg-solvera-primary/90 text-white font-bold py-4 px-8 rounded-full transition-all hover:scale-105 active:scale-95 flex items-center gap-3 border border-white/10">
-                        Jadwalkan Audit Kepatuhan & Strukturisasi
+                        {t('Jadwalkan Audit Kepatuhan & Strukturisasi', 'Schedule Compliance & Structuring Audit')}
                         <ArrowRight className="w-5 h-5" />
                     </button>
                 </Dialog.Trigger>
@@ -17,53 +19,53 @@ export const CTAModal = () => {
                 <Dialog.Overlay className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
                 <Dialog.Content className="fixed left-[50%] top-[50%] z-50 max-h-[85vh] w-[90vw] max-w-[500px] translate-x-[-50%] translate-y-[-50%] rounded-2xl bg-solvera-bg border border-white/10 p-6 shadow-2xl focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]">
                     <Dialog.Title className="text-xl font-bold text-white mb-2">
-                        Audit Strukturisasi & Kepatuhan
+                        {t('Audit Strukturisasi & Kepatuhan', 'Structuring & Compliance Audit')}
                     </Dialog.Title>
                     <Dialog.Description className="text-sm text-solvera-text/70 mb-6">
-                        Tim teknisi hukum kami akan meninjau aset Anda untuk kelayakan tokenisasi.
+                        {t('Tim teknisi hukum kami akan meninjau aset Anda untuk kelayakan tokenisasi.', 'Our legal engineering team will review your assets for tokenization feasibility.')}
                     </Dialog.Description>
 
                     <div className="space-y-3 mb-6">
                         <CheckItem
                             icon={<ShieldCheck className="w-5 h-5 text-solvera-highlight" />}
-                            title="Infrastruktur KYC/AML"
-                            desc="Pemeriksaan orientasi investor otomatis"
+                            title={t('Infrastruktur KYC/AML', 'KYC/AML Infrastructure')}
+                            desc={t('Pemeriksaan orientasi investor otomatis', 'Automated investor onboarding checks')}
                         />
                         <CheckItem
                             icon={<FileText className="w-5 h-5 text-solvera-highlight" />}
-                            title="Keamanan Smart Contract"
-                            desc="Audit kode & penilaian kerentanan"
+                            title={t('Keamanan Smart Contract', 'Smart Contract Security')}
+                            desc={t('Audit kode & penilaian kerentanan', 'Code audit & vulnerability assessment')}
                         />
                         <CheckItem
                             icon={<Lock className="w-5 h-5 text-solvera-highlight" />}
-                            title="Integrasi Cap Table"
-                            desc="Sinkronisasi On-chain vs Off-chain"
+                            title={t('Integrasi Cap Table', 'Cap Table Integration')}
+                            desc={t('Sinkronisasi On-chain vs Off-chain', 'On-chain vs Off-chain synchronization')}
                         />
                     </div>
 
                     <div className="bg-solvera-positive/10 border border-solvera-positive/20 rounded-xl p-4 mb-6">
-                        <h4 className="text-solvera-positive font-bold text-sm mb-1">Temuan ROI yang Diharapkan</h4>
+                        <h4 className="text-solvera-positive font-bold text-sm mb-1">{t('Temuan ROI yang Diharapkan', 'Expected ROI Findings')}</h4>
                         <div className="flex items-center gap-2 text-xs text-solvera-text/80">
                             <Check className="w-3 h-3 text-solvera-positive" />
-                            <span>Membuka Diskon Ilikuiditas 15-30%</span>
+                            <span>{t('Membuka Diskon Ilikuiditas 15-30%', 'Unlock 15-30% Illiquidity Discount')}</span>
                         </div>
                         <div className="flex items-center gap-2 text-xs text-solvera-text/80">
                             <Check className="w-3 h-3 text-solvera-positive" />
-                            <span>Kurangi Biaya Administrasi sebesar 40%</span>
+                            <span>{t('Kurangi Biaya Administrasi sebesar 40%', 'Reduce Administration Costs by 40%')}</span>
                         </div>
                     </div>
 
                     <div className="flex items-center justify-end gap-3">
                         <Dialog.Close asChild>
                             <button className="bg-white/5 hover:bg-white/10 text-white text-sm font-medium py-2.5 px-4 rounded-lg transition-colors">
-                                Batal
+                                {t('Batal', 'Cancel')}
                             </button>
                         </Dialog.Close>
                         <button
-                            onClick={() => alert("Permintaan Audit Terkirim (Demo)")}
+                            onClick={() => alert(t("Permintaan Audit Terkirim (Demo)", "Audit Request Sent (Demo)"))}
                             className="bg-solvera-primary hover:bg-solvera-primary/90 text-white text-sm font-bold py-2.5 px-6 rounded-lg transition-colors shadow-lg shadow-solvera-primary/20"
                         >
-                            Minta Audit
+                            {t('Minta Audit', 'Request Audit')}
                         </button>
                     </div>
 

@@ -1,6 +1,7 @@
 import React from 'react';
-import { formatIDR, formatPercent } from '../lib/utils';
+import { formatCurrency, formatPercent } from '../lib/utils';
 import type { SimulationResult } from '../hooks/useSimulation';
+import { useLanguage } from '../contexts/LanguageContext';
 import { TrendingUp, PieChart, Wallet } from 'lucide-react';
 
 interface AssetSummaryProps {
@@ -9,26 +10,27 @@ interface AssetSummaryProps {
 }
 
 export const AssetSummary: React.FC<AssetSummaryProps> = ({ results, tokenizedEquity }) => {
+    const { language, t } = useLanguage();
     return (
         <div className="grid gap-4 md:grid-cols-3 mb-8">
             <SummaryCard
-                title="Kapitalisasi Pasar (Post-Money)"
-                value={formatIDR(results.currentValuation)}
+                title={t('Kapitalisasi Pasar (Post-Money)', 'Market Capitalization (Post-Money)')}
+                value={formatCurrency(results.currentValuation, language)}
                 icon={<TrendingUp className="w-5 h-5 text-solvera-highlight" />}
-                subtext="Valuasi Startup Simulasi"
+                subtext={t('Valuasi Startup Simulasi', 'Simulated Startup Valuation')}
             />
             <SummaryCard
-                title="Float Tokenisasi"
+                title={t('Float Tokenisasi', 'Tokenized Float')}
                 value={`${tokenizedEquity}%`}
                 icon={<PieChart className="w-5 h-5 text-solvera-highlight" />}
-                subtext={`Nilai: ${formatIDR(results.currentValuation * (tokenizedEquity / 100))}`}
+                subtext={`${t('Nilai:', 'Value:')} ${formatCurrency(results.currentValuation * (tokenizedEquity / 100), language)}`}
             />
             <SummaryCard
-                title="IRR Investor (Ekspektasi)"
+                title={t('IRR Investor (Ekspektasi)', 'Investor IRR (Expected)')}
                 value={formatPercent(results.tokenized.netIRR)}
                 icon={<Wallet className="w-5 h-5 text-solvera-positive" />}
                 highlight
-                subtext="Imbal Hasil Proyeksi (Net)"
+                subtext={t('Imbal Hasil Proyeksi (Net)', 'Projected Returns (Net)')}
             />
         </div>
     );

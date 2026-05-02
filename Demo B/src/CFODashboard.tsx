@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Dialog, Transition } from '@headlessui/react';
 import Solvera from "./assets/Solvera.svg"
+import { useLanguage } from './contexts/LanguageContext';
 
 // --- Types & Interfaces ---
 
@@ -34,16 +35,23 @@ interface AgingDataItem {
     baseDueDays: number; // Days until due (negative = overdue)
 }
 
+const BASE_NET_CASH = 15000000000; // Rp 15 Miliar
+const MONTHLY_OPEX = 2500000000; // Rp 2.5 Miliar
+const BASE_MONTHLY_BURN_RATE = 850000000; // Rp 850 Juta
+const BASE_WORKING_CAPITAL = 4200000000; // Rp 4.2 Miliar
+const MONTHLY_REVENUE = 3500000000; // Rp 3.5 Miliar (assumed)
+const DAILY_REVENUE = MONTHLY_REVENUE / 30;
+
 // --- Baseline Data (will be modified by sliders) ---
 
 const BASE_CASH_FLOW: CashFlowDataPoint[] = [
-    { month: 'Jan', actual: 12.5, forecast: 12.5 },
-    { month: 'Feb', actual: 11.8, forecast: 11.8 },
-    { month: 'Mar', actual: 10.2, forecast: 11.2 },
-    { month: 'Apr', actual: 9.5, forecast: 10.5 },
-    { month: 'May', actual: 9.0, forecast: 9.8 }, // Filled actual/baseline for projection
-    { month: 'Jun', actual: 8.5, forecast: 9.1 }, // Filled actual/baseline for projection
-    { month: 'Jul', actual: 8.0, forecast: 8.4 }, // Filled actual/baseline for projection
+    { month: 'Jan', actual: 12500000000, forecast: 12500000000 },
+    { month: 'Feb', actual: 11800000000, forecast: 11800000000 },
+    { month: 'Mar', actual: 10200000000, forecast: 11200000000 },
+    { month: 'Apr', actual: 9500000000,  forecast: 10500000000 },
+    { month: 'May', actual: 9000000000,  forecast: 9800000000 }, // Investment month
+    { month: 'Jun', actual: 8500000000,  forecast: 9100000000 },
+    { month: 'Jul', actual: 8000000000,  forecast: 8400000000 },
 ];
 
 const BASE_BUDGET_VARIANCE: BudgetVarianceDataPoint[] = [
@@ -62,7 +70,15 @@ const BASE_AGING_DATA: AgingDataItem[] = [
 
 // --- Formatting Utils ---
 
-const formatIDR = (value: number) => {
+const formatCurrency = (value: number, language: 'id' | 'en' = 'id') => {
+    if (language === 'en') {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            maximumFractionDigits: 0,
+            minimumFractionDigits: 0,
+        }).format(value / 16000);
+    }
     return new Intl.NumberFormat('id-ID', {
         style: 'currency',
         currency: 'IDR',
@@ -71,13 +87,17 @@ const formatIDR = (value: number) => {
     }).format(value);
 };
 
-const formatMillions = (value: number) => {
+const formatMillions = (value: number, language: 'id' | 'en' = 'id') => {
+    if (language === 'en') {
+        return `$${(value / 16000 / 1000000).toFixed(1)}M`;
+    }
     return `Rp ${(value / 1000000).toFixed(0)} jt`;
 };
 
 // --- Main Component ---
 
 export default function CFODashboard() {
+    const { language, setLanguage, t } = useLanguage();
     // ROI Engine State
     const [investment, setInvestment] = useState(500000000); // 500 Juta
     const [efficiency, setEfficiency] = useState(15); // 15%
@@ -86,32 +106,28 @@ export default function CFODashboard() {
     // Modal State
     const [isAuditOpen, setIsAuditOpen] = useState(false);
 
+    // Shared Calculations
+    const annualOpex = MONTHLY_OPEX * 12;
+    const annualSavings = annualOpex * (efficiency / 100);
+    const monthlySavings = annualSavings / 12;
+    const dynamicBurnRate = BASE_MONTHLY_BURN_RATE - monthlySavings;
+
     // Derived Calculations with useMemo
     const calculatedMetrics = useMemo(() => {
-        // Baseline Constants
-        const BASE_NET_CASH = 15000000000; // Rp 15 Miliar
-        const monthlyOpex = 2500000000; // Rp 2.5 Miliar
-        const annualOpex = monthlyOpex * 12;
-        const BASE_WORKING_CAPITAL = 4200000000; // Rp 4.2 Miliar
-        const MONTHLY_REVENUE = 3500000000; // Rp 3.5 Miliar (assumed)
-        const dailyRevenue = MONTHLY_REVENUE / 30;
-
         // 1. Net Cash Calculation
         // - Investment reduces net cash (cash out)
         // - Efficiency improvements gradually add savings (simulated as immediate for simplicity)
-        const annualSavings = annualOpex * (efficiency / 100);
-        const monthlySavings = annualSavings / 12;
         const netCash = BASE_NET_CASH - investment + (monthlySavings * 3); // Assumes 3 months of accumulated savings
 
         // 2. Working Capital Calculation
         // - DSO reduction increases working capital (cash collected faster)
-        const workingCapital = BASE_WORKING_CAPITAL + (dailyRevenue * dsoReduction);
+        const workingCapital = BASE_WORKING_CAPITAL + (DAILY_REVENUE * dsoReduction);
 
         // 3. Payback Period
         const paybackYears = investment / annualSavings;
         const paybackText = paybackYears < 1
-            ? `${(paybackYears * 12).toFixed(1)} Bulan`
-            : `${paybackYears.toFixed(1)} Tahun`;
+            ? `${(paybackYears * 12).toFixed(1)} ${t('Bulan', 'Months')}`
+            : `${paybackYears.toFixed(1)} ${t('Tahun', 'Years')}`;
 
         // 4. NPV (5 Year Horizon, 10% Discount Rate)
         let npv = -investment;
@@ -119,47 +135,72 @@ export default function CFODashboard() {
             npv += annualSavings / Math.pow(1.1, i);
         }
 
+        // 5. Runway Calculation
+        const runwayMonths = dynamicBurnRate > 0 ? (netCash / dynamicBurnRate) : 999;
+
         return {
             netCash,
             workingCapital,
             annualSavings,
             paybackText,
-            npv
+            npv,
+            runwayMonths
         };
-    }, [investment, efficiency, dsoReduction]);
+    }, [investment, dsoReduction, monthlySavings, annualSavings, dynamicBurnRate, t]);
 
-    // Dynamic Budget Variance Data (reacts to efficiency slider)
+    // Dynamic Budget Variance Data (reacts to efficiency and investment)
     const budgetVarianceData = useMemo(() => {
-        return BASE_BUDGET_VARIANCE.map(item => ({
-            ...item,
-            // As efficiency increases, realisasi (actual spend) decreases
-            realisasi: Math.round(item.realisasi * (1 - (efficiency / 100)))
-        }));
-    }, [efficiency]);
+        const investmentInJuta = investment / 1000000;
 
-    // Dynamic Cash Flow Data (reacts to efficiency slider)
+        return BASE_BUDGET_VARIANCE.map(item => {
+            // 1. Efisiensi menghemat pengeluaran (menurunkan realisasi)
+            let currentRealisasi = item.realisasi * (1 - (efficiency / 100));
+
+            // 2. Investasi Engineering adalah BIAYA yang menambah pengeluaran aktual (realisasi)
+            // Asumsi: 30% investasi lari ke Cloud AWS, 70% lari ke Payroll (Tenaga IT/Konsultan)
+            if (item.category === 'Cloud AWS') {
+                currentRealisasi += investmentInJuta * 0.3;
+            } else if (item.category === 'Payroll') {
+                currentRealisasi += investmentInJuta * 0.7;
+            }
+
+            return {
+                ...item,
+                realisasi: Math.round(currentRealisasi)
+            };
+        });
+    }, [efficiency, investment]);
+
+    // Dynamic Cash Flow Data (reacts to efficiency slider, investment, and dsoReduction)
     const cashFlowData = useMemo(() => {
-        // "Baseline" (Blue) = Standard trajectory without optimization
-        // "Projected" (Green) = Trajectory WITH efficiency improvements
-
-        // Efficiency gain multiplier: e.g. 15% efficiency -> 1.15x cash preservation
-        const improvementFactor = 1 + (efficiency / 100);
+        // Projected starts diverging from Baseline in May (Investment Month)
+        let accumulatedSavings = 0;
+        let hasInvested = false;
+        const cashFreedFromDso = DAILY_REVENUE * dsoReduction; // Cash injected from faster AR collection
 
         return BASE_CASH_FLOW.map(point => {
-            // Calculate a baseline that smooths out the historical "actual" into a future projection for comparison
-            // For Jan-Apr, we use the real actuals. For May-Jul, we use a decay model or the base forecast as baseline.
-            // Simplified: We'll use the 'actual' field as the "Baseline" (Before ROI)
-            // and calculate "Projected" (After ROI) based on that.
+            const baselineValue = point.actual ?? point.forecast; // Fallback to forecast if actual was null
+            let projectedValue = baselineValue;
 
-            const baselineValue = point.actual ?? point.forecast; // Fallback to forecast if actual was null (though we filled it now)
+            if (point.month === 'May' || hasInvested) {
+                if (!hasInvested) {
+                    // First month of investment: subtract CapEx, but add the one-time cash freed from DSO reduction
+                    projectedValue = baselineValue - investment + cashFreedFromDso;
+                    hasInvested = true;
+                } else {
+                    // Subsequent months add accumulated savings onto the post-investment baseline (with DSO cash still retained)
+                    accumulatedSavings += monthlySavings;
+                    projectedValue = baselineValue - investment + cashFreedFromDso + accumulatedSavings;
+                }
+            }
 
             return {
                 month: point.month,
                 baseline: baselineValue,
-                projected: baselineValue * improvementFactor
+                projected: projectedValue
             };
         });
-    }, [efficiency]);
+    }, [investment, monthlySavings, dsoReduction]);
 
     // Dynamic Aging Data (reacts to dsoReduction slider)
     const agingData = useMemo(() => {
@@ -178,15 +219,15 @@ export default function CFODashboard() {
             } else if (adjustedDueDays <= 3) {
                 // Almost due
                 newStatus = 'Jatuh Tempo';
-                newDue = `${adjustedDueDays} Hari`;
+                newDue = `${adjustedDueDays} ${t('Hari', 'Days')}`;
             } else if (adjustedDueDays <= 15) {
                 // Normal/on track
                 newStatus = 'Lancar';
-                newDue = `${adjustedDueDays} Hari`;
+                newDue = `${adjustedDueDays} ${t('Hari', 'Days')}`;
             } else if (adjustedDueDays > 15) {
                 // Well ahead - could be marked as paid/early
                 newStatus = item.baseDueDays > 25 ? 'Baru' : 'Lancar';
-                newDue = `${adjustedDueDays} Hari`;
+                newDue = `${adjustedDueDays} ${t('Hari', 'Days')}`;
             }
 
             // If DSO improved significantly and item was critical, mark as paid
@@ -206,7 +247,7 @@ export default function CFODashboard() {
         <div className="min-h-screen bg-solvera-bg text-solvera-cream font-sans pb-20">
 
             {/* Header */}
-            <header className="bg-solvera-navy border-b border-solvera-navy/50 sticky top-0 z-10 shadow-lg">
+            <header className="bg-solvera-bg border-b border-gray-800 sticky top-0 z-10 shadow-lg">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <div className="w-16 h-16 flex items-center justify-center">
@@ -214,6 +255,20 @@ export default function CFODashboard() {
                         </div>
                     </div>
                     <div className="flex items-center gap-4 text-sm text-gray-300">
+                        <div className="flex items-center gap-2 bg-white/5 p-1 rounded-lg">
+                            <button 
+                                onClick={() => setLanguage('id')}
+                                className={`px-2 py-1 text-xs font-bold rounded ${language === 'id' ? 'bg-solvera-cyan text-solvera-bg' : 'text-gray-400 hover:text-white'}`}
+                            >
+                                ID
+                            </button>
+                            <button 
+                                onClick={() => setLanguage('en')}
+                                className={`px-2 py-1 text-xs font-bold rounded ${language === 'en' ? 'bg-solvera-cyan text-solvera-bg' : 'text-gray-400 hover:text-white'}`}
+                            >
+                                EN
+                            </button>
+                        </div>
                         <span>PT Demo Finansial Tbk</span>
                         <div className="h-8 w-8 rounded-full bg-solvera-cyan/20 border border-solvera-cyan flex items-center justify-center text-solvera-cyan">
                             CFO
@@ -227,27 +282,26 @@ export default function CFODashboard() {
                 {/* 1. Executive CFO View (Cards) - NOW DYNAMIC */}
                 <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <MetricCard
-                        title="Kas Bersih (Net Cash)"
-                        value={formatIDR(calculatedMetrics.netCash)}
-                        subtext={calculatedMetrics.netCash > 15000000000 ? '+' : ''}
+                        title={t("Kas Bersih (Net Cash)", "Net Cash")}
+                        value={formatCurrency(calculatedMetrics.netCash, language)}
                         icon={<Wallet className="text-solvera-cyan" />}
                     />
                     <MetricCard
-                        title="Burn Rate Bulanan"
-                        value="Rp 850.000.000"
-                        subtext="Stabil"
-                        icon={<TrendingDown className="text-orange-400" />}
+                        title={t("Burn Rate Bulanan", "Monthly Burn Rate")}
+                        value={dynamicBurnRate > 0 ? formatCurrency(dynamicBurnRate, language) : t("Profitable", "Profitable")}
+                        subtext={dynamicBurnRate < BASE_MONTHLY_BURN_RATE ? t("Menurun", "Decreasing") : t("Stabil", "Stable")}
+                        icon={<TrendingDown className={dynamicBurnRate < BASE_MONTHLY_BURN_RATE ? "text-solvera-lime" : "text-orange-400"} />}
                     />
                     <MetricCard
                         title="Runway"
-                        value="18 Bulan"
-                        subtext="Aman (>12 Bulan)"
-                        textColor="text-solvera-lime"
-                        icon={<Clock className="text-solvera-lime" />}
+                        value={calculatedMetrics.runwayMonths === 999 ? t('Tak Terhingga', 'Infinite') : `${calculatedMetrics.runwayMonths.toFixed(1)} ${t('Bulan', 'Months')}`}
+                        subtext={calculatedMetrics.runwayMonths > 12 ? t("Aman (>12 Bulan)", "Safe (>12 Months)") : t("Kritis (<12 Bulan)", "Critical (<12 Months)")}
+                        textColor={calculatedMetrics.runwayMonths > 12 ? "text-solvera-lime" : "text-red-400"}
+                        icon={<Clock className={calculatedMetrics.runwayMonths > 12 ? "text-solvera-lime" : "text-red-400"} />}
                     />
                     <MetricCard
                         title="Working Capital"
-                        value={formatIDR(calculatedMetrics.workingCapital)}
+                        value={formatCurrency(calculatedMetrics.workingCapital, language)}
                         subtext={`Ratio ${(calculatedMetrics.workingCapital / 2000000000).toFixed(1)}`}
                         icon={<Activity className="text-purple-400" />}
                     />
@@ -264,7 +318,7 @@ export default function CFODashboard() {
                                     <ArrowUpRight className="text-solvera-lime" />
                                     ROI Engine: Scenario Simulator
                                 </h2>
-                                <p className="text-gray-400 text-sm mt-1">Simulasi dampak investasi teknologi terhadap OPEX</p>
+                                <p className="text-gray-400 text-sm mt-1">{t('Simulasi dampak investasi teknologi terhadap OPEX', 'Simulation of technology investment impact on OPEX')}</p>
                             </div>
                         </div>
 
@@ -272,16 +326,16 @@ export default function CFODashboard() {
                             {/* Inputs */}
                             <div className="space-y-6">
                                 <SliderInput
-                                    label="Investasi Engineering"
+                                    label={t("Investasi Engineering", "Engineering Investment")}
                                     value={investment}
                                     min={100000000}
                                     max={5000000000}
                                     step={10000000}
-                                    format={formatMillions}
+                                    format={(val: number) => formatMillions(val, language)}
                                     onChange={setInvestment}
                                 />
                                 <SliderInput
-                                    label="Est. Efisiensi Operasional"
+                                    label={t("Est. Efisiensi Operasional", "Est. Operational Efficiency")}
                                     value={efficiency}
                                     min={5}
                                     max={40}
@@ -289,11 +343,11 @@ export default function CFODashboard() {
                                     onChange={setEfficiency}
                                 />
                                 <SliderInput
-                                    label="Pengurangan DSO (Hari)"
+                                    label={t("Pengurangan DSO (Hari)", "DSO Reduction (Days)")}
                                     value={dsoReduction}
                                     min={0}
                                     max={30}
-                                    appended=" Hari"
+                                    appended={t(" Hari", " Days")}
                                     onChange={setDsoReduction}
                                 />
                             </div>
@@ -301,17 +355,17 @@ export default function CFODashboard() {
                             {/* Outputs */}
                             <div className="bg-solvera-bg/50 rounded-xl p-4 border border-gray-700 space-y-4">
                                 <ResultRow
-                                    label="Total Penghematan OPEX (per Tahun)"
-                                    value={formatIDR(calculatedMetrics.annualSavings)}
+                                    label={t("Total Penghematan OPEX (per Tahun)", "Total OPEX Savings (per Year)")}
+                                    value={formatCurrency(calculatedMetrics.annualSavings, language)}
                                 />
                                 <ResultRow
-                                    label="Payback Period"
+                                    label={t("Payback Period", "Payback Period")}
                                     value={calculatedMetrics.paybackText}
                                     highlight
                                 />
                                 <ResultRow
-                                    label="Net Present Value (5 Tahun)"
-                                    value={formatIDR(calculatedMetrics.npv)}
+                                    label={t("Net Present Value (5 Tahun)", "Net Present Value (5 Years)")}
+                                    value={formatCurrency(Math.abs(calculatedMetrics.npv), language)}
                                     highlight
                                 />
                             </div>
@@ -320,7 +374,7 @@ export default function CFODashboard() {
 
                     {/* Chart B: Variance Analysis - NOW DYNAMIC */}
                     <div className="bg-solvera-card-bg rounded-xl p-6 border border-gray-800 shadow-xl flex flex-col">
-                        <h3 className="text-lg font-bold text-white mb-4">Analisis Varians (Budget vs Real)</h3>
+                        <h3 className="text-lg font-bold text-white mb-4">{t('Analisis Varians (Budget vs Real)', 'Variance Analysis (Budget vs Actual)')}</h3>
                         <div className="flex-1 w-full min-h-[250px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={budgetVarianceData} layout="vertical" margin={{ top: 5, right: 30, left: 60, bottom: 5 }}>
@@ -330,7 +384,7 @@ export default function CFODashboard() {
                                     <Tooltip
                                         contentStyle={{ backgroundColor: '#181B21', borderColor: '#374151', color: '#F3EED8' }}
                                         itemStyle={{ color: '#F3EED8' }}
-                                        formatter={(val: any) => formatMillions(Number(val) * 1000000).replace('Rp ', '')}
+                                        formatter={(val: any) => formatMillions(Number(val) * 1000000, language).replace(language === 'en' ? '$' : 'Rp ', '')}
                                     />
                                     <Legend wrapperStyle={{ fontSize: '12px' }} />
                                     <Bar dataKey="budget" name="Budget" fill="#0F547D" radius={[0, 4, 4, 0]} />
@@ -345,8 +399,8 @@ export default function CFODashboard() {
                 <section className="bg-solvera-card-bg rounded-xl p-6 border border-gray-800 shadow-xl">
                     <div className="flex justify-between items-end mb-6">
                         <div>
-                            <h3 className="text-lg font-bold text-white">Cash Flow Forecast (Simulation)</h3>
-                            <p className="text-sm text-gray-400">Baseline vs. Projected (with ROI Improvement)</p>
+                            <h3 className="text-lg font-bold text-white">{t('Cash Flow Forecast (Simulation)', 'Cash Flow Forecast (Simulation)')}</h3>
+                            <p className="text-sm text-gray-400">{t('Baseline vs. Projected (with ROI Improvement)', 'Baseline vs. Projected (with ROI Improvement)')}</p>
                         </div>
                         <div className="flex gap-4 text-xs">
                             <div className="flex items-center gap-2"><div className="w-3 h-3 bg-solvera-cyan opacity-50 rounded-full"></div> Baseline</div>
@@ -367,14 +421,18 @@ export default function CFODashboard() {
                                     </linearGradient>
                                 </defs>
                                 <XAxis dataKey="month" stroke="#6b7280" tick={{ fontSize: 12 }} />
-                                <YAxis stroke="#6b7280" tickFormatter={(val) => `${val.toFixed(1)}M`} tick={{ fontSize: 12 }} />
+                                <YAxis 
+                                    stroke="#6b7280" 
+                                    tickFormatter={(val) => language === 'en' ? `$${(val / 16000 / 1000000).toFixed(1)}M` : `${(val / 1000000000).toFixed(1)}M`} 
+                                    tick={{ fontSize: 12 }} 
+                                />
                                 <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
                                 <Tooltip
                                     contentStyle={{ backgroundColor: '#181B21', borderColor: '#374151', color: '#F3EED8' }}
                                     labelStyle={{ color: '#9ca3af', marginBottom: '0.5rem' }}
                                     formatter={(val: number, name: string) => [
-                                        `Rp ${val.toFixed(1)} M`,
-                                        name === 'baseline' ? 'Baseline (Current)' : 'Projected (+ROI)'
+                                        formatCurrency(val, language).replace(new RegExp(language === 'en' ? '\\$' : 'Rp\\s?', 'g'), ''),
+                                        name === 'baseline' ? t('Baseline (Current)', 'Baseline (Current)') : t('Projected (+ROI)', 'Projected (+ROI)')
                                     ]}
                                 />
                                 <Area
@@ -409,11 +467,11 @@ export default function CFODashboard() {
                         <table className="w-full text-left text-sm">
                             <thead className="bg-solvera-bg/50 text-gray-400 font-mono uppercase tracking-wider">
                                 <tr>
-                                    <th className="px-6 py-4">Vendor / Client</th>
-                                    <th className="px-6 py-4">Tipe</th>
-                                    <th className="px-6 py-4 text-right">Nilai (IDR)</th>
-                                    <th className="px-6 py-4">Jatuh Tempo</th>
-                                    <th className="px-6 py-4">Status</th>
+                                    <th className="px-6 py-4">{t('Vendor / Client', 'Vendor / Client')}</th>
+                                    <th className="px-6 py-4">{t('Tipe', 'Type')}</th>
+                                    <th className="px-6 py-4 text-right">{t('Nilai (IDR)', 'Value')}</th>
+                                    <th className="px-6 py-4">{t('Jatuh Tempo', 'Due')}</th>
+                                    <th className="px-6 py-4">{t('Status', 'Status')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-800">
@@ -421,9 +479,9 @@ export default function CFODashboard() {
                                     <tr key={item.id} className="hover:bg-white/5 transition-colors">
                                         <td className="px-6 py-4 font-medium text-white">{item.vendor}</td>
                                         <td className="px-6 py-4 text-gray-400">{item.type}</td>
-                                        <td className="px-6 py-4 text-right font-mono text-solvera-cream">
-                                            {new Intl.NumberFormat('id-ID').format(item.amount)}
-                                        </td>
+                                            <td className="px-6 py-4 text-right font-mono text-solvera-cream">
+                                                {formatCurrency(item.amount, language)}
+                                            </td>
                                         <td className="px-6 py-4 text-gray-400">{item.due}</td>
                                         <td className="px-6 py-4">
                                             <StatusBadge status={item.status} />
@@ -443,7 +501,7 @@ export default function CFODashboard() {
                     onClick={() => setIsAuditOpen(true)}
                     className="bg-solvera-cyan hover:bg-cyan-300 text-solvera-bg font-bold py-3 px-6 rounded-full shadow-[0_0_20px_rgba(122,229,255,0.4)] transition-all transform hover:scale-105 flex items-center gap-2"
                 >
-                    <span>Book Audit: Finance Healthcheck</span>
+                    <span>{t('Book Audit: Finance Healthcheck', 'Book Audit: Finance Healthcheck')}</span>
                     <ChevronRight size={20} />
                 </button>
             </div>
@@ -466,7 +524,7 @@ function MetricCard({ title, value, subtext, icon, textColor = 'text-white' }: a
             </div>
             <div>
                 <div className={`text-2xl font-bold font-mono ${textColor} mb-1`}>{value}</div>
-                <div className="text-xs text-gray-500">{subtext}</div>
+                <div className="text-xs text-gray-500 min-h-[16px]">{subtext}</div>
             </div>
         </div>
     );
@@ -477,7 +535,7 @@ function SliderInput({ label, value, min, max, step = 1, appended = '', format, 
         <div>
             <div className="flex justify-between mb-2">
                 <label className="text-sm text-gray-300">{label}</label>
-                <span className="font-mono text-solvera-cyan font-bold">
+                <span className="font-mono text-solvera-cyan font-bold whitespace-nowrap shrink-0">
                     {format ? format(value) : value}{appended}
                 </span>
             </div>
@@ -488,7 +546,7 @@ function SliderInput({ label, value, min, max, step = 1, appended = '', format, 
                 step={step}
                 value={value}
                 onChange={(e) => onChange(Number(e.target.value))}
-                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-solvera-cyan hover:accent-cyan-300"
+                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-solvera-cream hover:opacity-90"
             />
         </div>
     );
@@ -496,9 +554,9 @@ function SliderInput({ label, value, min, max, step = 1, appended = '', format, 
 
 function ResultRow({ label, value, highlight = false }: any) {
     return (
-        <div className="flex justify-between items-center border-b border-gray-700/50 pb-2 last:border-0 last:pb-0">
-            <span className="text-sm text-gray-400">{label}</span>
-            <span className={`font-mono font-bold ${highlight ? 'text-solvera-lime text-lg' : 'text-white'}`}>
+        <div className="flex justify-between items-center border-b border-gray-700/50 pb-2 last:border-0 last:pb-0 gap-4">
+            <span className="text-sm text-gray-400 leading-tight">{label}</span>
+            <span className={`font-mono font-bold whitespace-nowrap shrink-0 ${highlight ? 'text-solvera-lime text-lg' : 'text-white'}`}>
                 {value}
             </span>
         </div>
@@ -506,21 +564,40 @@ function ResultRow({ label, value, highlight = false }: any) {
 }
 
 function StatusBadge({ status }: { status: string }) {
+    const { language, t } = useLanguage();
     let colorClass = 'bg-gray-800 text-gray-300';
-    if (status === 'Lunas' || status === 'Lancar') colorClass = 'bg-green-900/30 text-green-400 border border-green-900';
-    if (status === 'Jatuh Tempo') colorClass = 'bg-yellow-900/30 text-yellow-400 border border-yellow-900';
-    if (status === 'Overdue') colorClass = 'bg-red-900/30 text-red-400 border border-red-900';
-    if (status === 'Baru') colorClass = 'bg-blue-900/30 text-blue-400 border border-blue-900';
-    if (status === 'Kritis') colorClass = 'bg-red-950 text-red-500 border border-red-800 animate-pulse';
+    let translatedStatus = status;
+
+    if (status === 'Lunas' || status === 'Lancar') {
+        colorClass = 'bg-green-900/30 text-green-400 border border-green-900';
+        translatedStatus = t(status, status === 'Lunas' ? 'Paid' : 'On Track');
+    }
+    if (status === 'Jatuh Tempo') {
+        colorClass = 'bg-yellow-900/30 text-yellow-400 border border-yellow-900';
+        translatedStatus = t(status, 'Due');
+    }
+    if (status === 'Overdue') {
+        colorClass = 'bg-red-900/30 text-red-400 border border-red-900';
+        translatedStatus = t(status, 'Overdue');
+    }
+    if (status === 'Baru') {
+        colorClass = 'bg-blue-900/30 text-blue-400 border border-blue-900';
+        translatedStatus = t(status, 'New');
+    }
+    if (status === 'Kritis') {
+        colorClass = 'bg-red-950 text-red-500 border border-red-800 animate-pulse';
+        translatedStatus = t(status, 'Critical');
+    }
 
     return (
         <span className={`px-3 py-1 rounded-full text-xs font-medium ${colorClass}`}>
-            {status}
+            {translatedStatus}
         </span>
     );
 }
 
 function AuditModal({ isOpen, onClose }: any) {
+    const { t } = useLanguage();
     return (
         <Transition appear show={isOpen} as={Fragment}>
             <Dialog as="div" className="relative z-50" onClose={onClose}>
@@ -552,22 +629,22 @@ function AuditModal({ isOpen, onClose }: any) {
                                     as="h3"
                                     className="text-xl font-bold leading-6 text-white mb-2"
                                 >
-                                    Book Audit: Finance Healthcheck
+                                    {t('Book Audit: Finance Healthcheck', 'Book Audit: Finance Healthcheck')}
                                 </Dialog.Title>
                                 <div className="mt-2">
                                     <p className="text-sm text-gray-400 mb-6">
-                                        Tim ahli kami akan melakukan audit menyeluruh terhadap infrastruktur finansial Anda.
+                                        {t('Tim ahli kami akan melakukan audit menyeluruh terhadap infrastruktur finansial Anda.', 'Our expert team will conduct a thorough audit of your financial infrastructure.')}
                                     </p>
 
                                     <div className="space-y-4 mb-6">
-                                        <CheckItem text="Kesiapan Otomatisasi Laporan (Reporting Automation)" />
-                                        <CheckItem text="Pengecekan Kualitas Data (Data Quality Assurance)" />
-                                        <CheckItem text="Rekomendasi Penghematan Cloud & Infrastruktur" />
+                                        <CheckItem text={t("Kesiapan Otomatisasi Laporan (Reporting Automation)", "Reporting Automation Readiness")} />
+                                        <CheckItem text={t("Pengecekan Kualitas Data (Data Quality Assurance)", "Data Quality Assurance Checks")} />
+                                        <CheckItem text={t("Rekomendasi Penghematan Cloud & Infrastruktur", "Cloud & Infrastructure Savings Recommendations")} />
                                     </div>
 
                                     <div className="p-4 bg-solvera-navy/20 rounded-lg border border-solvera-navy/50 text-center mb-6">
                                         <p className="text-solvera-cyan font-medium text-sm">
-                                            "Dapatkan roadmap efisiensi finansial dalam 2 minggu."
+                                            {t('"Dapatkan roadmap efisiensi finansial dalam 2 minggu."', '"Get a financial efficiency roadmap in 2 weeks."')}
                                         </p>
                                     </div>
                                 </div>
@@ -578,14 +655,14 @@ function AuditModal({ isOpen, onClose }: any) {
                                         className="flex-1 justify-center rounded-lg border border-transparent bg-solvera-lime px-4 py-2 text-sm font-bold text-solvera-bg hover:bg-lime-400 transition-colors focus:outline-none"
                                         onClick={onClose}
                                     >
-                                        Jadwalkan Sekarang
+                                        {t('Jadwalkan Sekarang', 'Schedule Now')}
                                     </button>
                                     <button
                                         type="button"
                                         className="flex-1 justify-center rounded-lg border border-gray-600 bg-transparent px-4 py-2 text-sm font-medium text-gray-300 hover:bg-white/5 focus:outline-none"
                                         onClick={onClose}
                                     >
-                                        Batal
+                                        {t('Batal', 'Cancel')}
                                     </button>
                                 </div>
                             </Dialog.Panel>

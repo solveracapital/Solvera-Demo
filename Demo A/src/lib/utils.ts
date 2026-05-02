@@ -5,7 +5,16 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-export function formatIDR(amount: number): string {
+export function formatCurrency(amount: number, language: 'id' | 'en' = 'id'): string {
+    if (language === 'en') {
+        const usdAmount = amount / 16000;
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        }).format(usdAmount);
+    }
     return new Intl.NumberFormat('id-ID', {
         style: 'currency',
         currency: 'IDR',

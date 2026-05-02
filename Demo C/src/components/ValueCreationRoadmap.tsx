@@ -3,6 +3,7 @@ import { Switch } from '@headlessui/react';
 import { clsx } from 'clsx';
 import type { Initiative } from '../types';
 import { Zap } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface Props {
     initiatives: Initiative[];
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export const ValueCreationRoadmap: React.FC<Props> = ({ initiatives, activeInitiatives, onToggle }) => {
+    const { language, t } = useLanguage();
     return (
         <div className="space-y-4">
             {initiatives.map((item) => {
@@ -34,12 +36,14 @@ export const ValueCreationRoadmap: React.FC<Props> = ({ initiatives, activeIniti
                             </div>
                             <div>
                                 <h4 className={clsx("font-medium", isActive ? "text-white" : "text-gray-400")}>
-                                    {item.name}
+                                    {t(item.name, item.name)}
                                 </h4>
                                 <div className="text-sm text-gray-500 mt-1 font-mono">
-                                    Biaya: Rp {(item.cost / 1000000).toFixed(0)} Jt
+                                    {language === 'en' 
+                                        ? `Cost: $${(item.cost / 16000 / 1000).toFixed(1)}k` 
+                                        : `Biaya: Rp ${(item.cost / 1000000).toFixed(0)} Jt`}
                                     <span className="mx-2">•</span>
-                                    Dampak: +{item.impact_multiple}x
+                                    {t('Dampak', 'Impact')}: +{item.impact_multiple}x
                                 </div>
                             </div>
                         </div>
