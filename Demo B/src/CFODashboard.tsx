@@ -252,10 +252,10 @@ export default function CFODashboard() {
             <header className="bg-solvera-bg border-b border-gray-800 sticky top-0 z-10 shadow-lg">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <a href="https://solvera-web-dun.vercel.app/#portfolio" className="flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-white transition-colors bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/10">
+                        <button onClick={() => { window.close(); setTimeout(() => { window.location.href = "https://solvera-web-dun.vercel.app/#portfolio"; }, 300); }} className="flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-white transition-colors bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/10 cursor-pointer">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
                             {t('Kembali', 'Back')}
-                        </a>
+                        </button>
                         <div className="w-12 h-12 flex items-center justify-center">
                             <img src={Solvera} alt="Solvera" className="w-full h-full object-contain" />
                         </div>
