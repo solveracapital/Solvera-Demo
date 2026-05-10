@@ -31,6 +31,7 @@ interface AgingDataItem {
     id: number;
     vendor: string;
     type: string;
+    typeEn: string;
     amount: number;
     due: string;
     status: string;
@@ -64,10 +65,10 @@ const BASE_BUDGET_VARIANCE: BudgetVarianceDataPoint[] = [
 ];
 
 const BASE_AGING_DATA: AgingDataItem[] = [
-    { id: 1, vendor: 'PT Awan Digital', type: 'Cloud', amount: 150000000, due: '2 Hari', status: 'Jatuh Tempo', baseDueDays: 2 },
-    { id: 2, vendor: 'Gedung Sentral', type: 'Sewa', amount: 450000000, due: '14 Hari', status: 'Lancar', baseDueDays: 14 },
-    { id: 3, vendor: 'CV Kreatif', type: 'Jasa', amount: 25000000, due: '30 Hari', status: 'Baru', baseDueDays: 30 },
-    { id: 4, vendor: 'Server Corp', type: 'Hardware', amount: 850000000, due: 'Overdue', status: 'Kritis', baseDueDays: -5 },
+    { id: 1, vendor: 'PT Awan Digital', type: 'Cloud', typeEn: 'Cloud', amount: 150000000, due: '2 Hari', status: 'Jatuh Tempo', baseDueDays: 2 },
+    { id: 2, vendor: 'Gedung Sentral', type: 'Sewa', typeEn: 'Lease', amount: 450000000, due: '14 Hari', status: 'Lancar', baseDueDays: 14 },
+    { id: 3, vendor: 'CV Kreatif', type: 'Jasa', typeEn: 'Service', amount: 25000000, due: '30 Hari', status: 'Baru', baseDueDays: 30 },
+    { id: 4, vendor: 'Server Corp', type: 'Hardware', typeEn: 'Hardware', amount: 850000000, due: 'Overdue', status: 'Kritis', baseDueDays: -5 },
 ];
 
 // --- Formatting Utils ---
@@ -154,9 +155,22 @@ export default function CFODashboard() {
     const budgetVarianceData = useMemo(() => {
         const investmentInJuta = investment / 1000000;
 
+        // Efficiency impact weights per category:
+        // Cloud AWS: 80% impacted (automatable infra)
+        // Payroll: 30% impacted (partial automation of manual tasks)
+        // Marketing: 10% impacted (minor efficiency gains)
+        // General: 5% impacted (mostly fixed costs)
+        const efficiencyWeights: Record<string, number> = {
+            'Cloud AWS': 0.80,
+            'Payroll': 0.30,
+            'Marketing': 0.10,
+            'General': 0.05,
+        };
+
         return BASE_BUDGET_VARIANCE.map(item => {
-            // 1. Efisiensi menghemat pengeluaran (menurunkan realisasi)
-            let currentRealisasi = item.realisasi * (1 - (efficiency / 100));
+            // 1. Apply weighted efficiency reduction per category
+            const weight = efficiencyWeights[item.category] ?? 0;
+            let currentRealisasi = item.realisasi * (1 - (efficiency / 100) * weight);
 
             // 2. Investasi Engineering adalah BIAYA yang menambah pengeluaran aktual (realisasi)
             // Asumsi: 30% investasi lari ke Cloud AWS, 70% lari ke Payroll (Tenaga IT/Konsultan)
@@ -204,7 +218,7 @@ export default function CFODashboard() {
         });
     }, [investment, monthlySavings, dsoReduction]);
 
-    // Dynamic Aging Data (reacts to dsoReduction slider)
+    // Dynamic Aging Data (reacts to dsoReduction slider and language)
     const agingData = useMemo(() => {
         return BASE_AGING_DATA.map(item => {
             // Simulate DSO reduction: add dsoReduction days to each item's due days
@@ -217,7 +231,7 @@ export default function CFODashboard() {
             if (adjustedDueDays < 0) {
                 // Still overdue
                 newStatus = 'Kritis';
-                newDue = 'Overdue';
+                newDue = t('Lewat Tempo', 'Overdue');
             } else if (adjustedDueDays <= 3) {
                 // Almost due
                 newStatus = 'Jatuh Tempo';
@@ -239,11 +253,12 @@ export default function CFODashboard() {
 
             return {
                 ...item,
+                type: t(item.type, item.typeEn),
                 due: newDue,
                 status: newStatus
             };
         });
-    }, [dsoReduction]);
+    }, [dsoReduction, t]);
 
     return (
         <div className="min-h-screen bg-solvera-bg text-solvera-cream font-sans pb-20">
@@ -371,7 +386,7 @@ export default function CFODashboard() {
                                 />
                                 <ResultRow
                                     label={t("Net Present Value (5 Tahun)", "Net Present Value (5 Years)")}
-                                    value={formatCurrency(Math.abs(calculatedMetrics.npv), language)}
+                                    value={`${calculatedMetrics.npv < 0 ? '- ' : ''}${formatCurrency(Math.abs(calculatedMetrics.npv), language)}`}
                                     highlight
                                 />
                             </div>
@@ -394,7 +409,7 @@ export default function CFODashboard() {
                                     />
                                     <Legend wrapperStyle={{ fontSize: '12px' }} />
                                     <Bar dataKey="budget" name="Budget" fill="#0F547D" radius={[0, 4, 4, 0]} />
-                                    <Bar dataKey="realisasi" name="Realisasi" fill="#7AE5FF" radius={[0, 4, 4, 0]} />
+                                    <Bar dataKey="realisasi" name={t('Realisasi', 'Actual')} fill="#7AE5FF" radius={[0, 4, 4, 0]} />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
