@@ -8,7 +8,7 @@ export const Header: React.FC = () => {
         <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-solvera-bg/80 backdrop-blur-md">
             <div className="container mx-auto flex h-16 items-center justify-between px-4">
                 <div className="flex items-center gap-4">
-                    <a href="https://solvera.biz.id/#portfolio" className="flex items-center gap-2 text-xs font-bold text-solvera-text/60 hover:text-white transition-colors bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/10">
+                    <a href="https://solvera-web-dun.vercel.app/#portfolio" className="flex items-center gap-2 text-xs font-bold text-solvera-text/60 hover:text-white transition-colors bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/10">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
                         {t('Kembali', 'Back')}
                     </a>
